@@ -7,11 +7,13 @@
 // libwebsockets
 #include "../../../.bin/libwebsockets/include/libwebsockets.h"
 
+static struct libwebsocket *wso = NULL;
+
 static int callback_http(struct libwebsocket_context *this,
                          struct libwebsocket *wsi,
                          enum libwebsocket_callback_reasons reason,
                          void *user,
-                         void *in,
+                         void *incoming,
                          size_t len) {
 	return 0;
 }
@@ -24,14 +26,22 @@ static int callback_dumb_increment(struct libwebsocket_context *this,
                                    struct libwebsocket *wsi,
                                    enum libwebsocket_callback_reasons reason,
                                    void *user,
-                                   void *in,
+                                   void *incoming,
                                    size_t len) {
 	switch (reason) {
 		case LWS_CALLBACK_ESTABLISHED:
 			NSLog(@"Connection established.");
+			// whenever a new connection is established
+			// use that for sending messages out
+			wso = wsi;
+			// create the data buffer
+			unsigned char *buf = (unsigned char*) malloc(LWS_SEND_BUFFER_PRE_PADDING + 1 + LWS_SEND_BUFFER_POST_PADDING);
+			buf[LWS_SEND_BUFFER_PRE_PADDING] = 42;
+			NSLog(@"Sending: %.*s", 1, buf + LWS_SEND_BUFFER_PRE_PADDING);
+			libwebsocket_write(wso, &buf[LWS_SEND_BUFFER_PRE_PADDING], 1, LWS_WRITE_TEXT);
 			break;
 		case LWS_CALLBACK_RECEIVE:
-			NSLog(@"%s", in);
+			NSLog(@"%s", incoming);
 			break;
 		default:
 			// do nothing
