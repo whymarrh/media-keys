@@ -7,7 +7,7 @@
 #import <IOKit/hidsystem/ev_keymap.h>
 
 // libwebsockets
-#include "../../../.bin/libwebsockets/include/libwebsockets.h"
+#include <libwebsockets.h>
 
 static struct libwebsocket *wso = NULL;
 static BOOL shouldKeepRunning = YES;
