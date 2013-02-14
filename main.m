@@ -13,7 +13,7 @@ static struct libwebsocket *wso = NULL;
 static BOOL shouldKeepRunning = YES;
 static BOOL shouldCaptureMediaKeys = NO;
 
-struct per_session_data__dumb_increment {
+struct per_session_data__media_keys {
 	int number;
 };
 
@@ -26,12 +26,12 @@ static int callback_http(struct libwebsocket_context *this,
 	return 0;
 }
 
-static int callback_dumb_increment(struct libwebsocket_context *this,
-                                   struct libwebsocket *wsi,
-                                   enum libwebsocket_callback_reasons reason,
-                                   void *user,
-                                   void *incoming,
-                                   size_t len) {
+static int callback_media_keys(struct libwebsocket_context *this,
+                               struct libwebsocket *wsi,
+                               enum libwebsocket_callback_reasons reason,
+                               void *user,
+                               void *incoming,
+                               size_t len) {
 	switch (reason) {
 		case LWS_CALLBACK_ESTABLISHED:
 			NSLog(@"Connection established.");
@@ -40,7 +40,6 @@ static int callback_dumb_increment(struct libwebsocket_context *this,
 			// connections are made - only the newest is sent the
 			// data. Maybe I can use an array? and that way I could
 			// loop over all the connections and send the data.
-			// Derp?
 			wso = wsi;
 			// start capturing keystrokes
 			shouldCaptureMediaKeys = YES;
@@ -58,7 +57,7 @@ static int callback_dumb_increment(struct libwebsocket_context *this,
 static struct libwebsocket_protocols protocols[] = {
 	// { name, callback, per_session_data_size }
 	{ "http-only", callback_http, 0, 0 },
-	{ "dumb-increment-protocol", callback_dumb_increment, sizeof(struct per_session_data__dumb_increment), 10 },
+	{ "media-keys", callback_media_keys, sizeof(struct per_session_data__media_keys), 10 },
 	// terminator
 	{ NULL, NULL, 0, 0 }
 };
