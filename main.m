@@ -3,11 +3,19 @@
 
 // ObjC
 #import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
+#import <IOKit/hidsystem/ev_keymap.h>
 
 // libwebsockets
 #include "../../../.bin/libwebsockets/include/libwebsockets.h"
 
 static struct libwebsocket *wso = NULL;
+static BOOL shouldKeepRunning = YES;
+static BOOL shouldCaptureMediaKeys = NO;
+
+struct per_session_data__dumb_increment {
+	int number;
+};
 
 static int callback_http(struct libwebsocket_context *this,
                          struct libwebsocket *wsi,
@@ -18,10 +26,6 @@ static int callback_http(struct libwebsocket_context *this,
 	return 0;
 }
 
-struct per_session_data__dumb_increment {
-	int number;
-};
-
 static int callback_dumb_increment(struct libwebsocket_context *this,
                                    struct libwebsocket *wsi,
                                    enum libwebsocket_callback_reasons reason,
@@ -31,14 +35,15 @@ static int callback_dumb_increment(struct libwebsocket_context *this,
 	switch (reason) {
 		case LWS_CALLBACK_ESTABLISHED:
 			NSLog(@"Connection established.");
-			// whenever a new connection is established
-			// use that for sending messages out
+			// use this new connection to send outgoing messages
+			// the issue (I think) this causes occurs when multiple
+			// connections are made - only the newest is sent the
+			// data. Maybe I can use an array? and that way I could
+			// loop over all the connections and send the data.
+			// Derp?
 			wso = wsi;
-			// create the data buffer
-			unsigned char *buf = (unsigned char*) malloc(LWS_SEND_BUFFER_PRE_PADDING + 1 + LWS_SEND_BUFFER_POST_PADDING);
-			buf[LWS_SEND_BUFFER_PRE_PADDING] = 42;
-			NSLog(@"Sending: %.*s", 1, buf + LWS_SEND_BUFFER_PRE_PADDING);
-			libwebsocket_write(wso, &buf[LWS_SEND_BUFFER_PRE_PADDING], 1, LWS_WRITE_TEXT);
+			// start capturing keystrokes
+			shouldCaptureMediaKeys = YES;
 			break;
 		case LWS_CALLBACK_RECEIVE:
 			NSLog(@"%s", incoming);
@@ -58,7 +63,52 @@ static struct libwebsocket_protocols protocols[] = {
 	{ NULL, NULL, 0, 0 }
 };
 
-int main(int argc, char **argv) {
+@interface MediaKeys : NSApplication
+@end
+
+@implementation MediaKeys
+- (void) sendEvent:(NSEvent*)event {
+	if ([event type] == NSSystemDefined && [event subtype] == 8) {
+		int kcode   = ([event data1] & 0xffff0000) >> 16;
+		int kflags  =  [event data1] & 0x0000ffff;
+		int kstate  = ((kflags & 0xff00) >> 8) == 0xa;
+		int krepeat = kflags * 0x1;
+		[self mediaKeysEvent:kcode state:kstate repeat:krepeat];
+	}
+}
+- (void) mediaKeysEvent:(int)key state:(BOOL)state repeat:(BOOL)repeat {
+	unsigned char *data = (unsigned char*) malloc(LWS_SEND_BUFFER_PRE_PADDING + 1 + LWS_SEND_BUFFER_POST_PADDING);
+	data[LWS_SEND_BUFFER_PRE_PADDING] = 42;
+	switch (key) {
+		case NX_KEYTYPE_REWIND:
+			if (state == 0) {
+				NSLog(@"Previous song. %d.", key);
+				data[LWS_SEND_BUFFER_PRE_PADDING] = (char) key;
+			}
+			break;
+		case NX_KEYTYPE_PLAY:
+			if (state == 0) {
+				NSLog(@"Play/pause. %d.", key);
+				data[LWS_SEND_BUFFER_PRE_PADDING] = key;
+			}
+			break;
+		case NX_KEYTYPE_FAST:
+			if (state == 0) {
+				NSLog(@"Next song. %d.", key);
+				data[LWS_SEND_BUFFER_PRE_PADDING] = key;
+			}
+			break;
+		default:
+			// do nothing
+			break;
+	}
+	if (data[LWS_SEND_BUFFER_PRE_PADDING] != 42) {
+		// the data has changed && it needs sending
+		libwebsocket_write(wso, &data[LWS_SEND_BUFFER_PRE_PADDING], /* length of the actual data */ 1, LWS_WRITE_TEXT);
+	}
+	free(data);
+}
+- (void) run {
 	// create the context for the web sockets
 	struct libwebsocket_context *context;
 	struct lws_context_creation_info info;
@@ -75,14 +125,33 @@ int main(int argc, char **argv) {
 	context = libwebsocket_create_context(&info);
 	if (context == NULL) {
 		NSLog(@"Error creating websocket server.");
-		return EXIT_FAILURE;
+		return;
 	}
-	NSLog(@"Starting server on port %d.", info.port);
-	for (;;) {
+	// woot!
+	NSLog(@"Server started.");
+	shouldKeepRunning = YES;
+	shouldCaptureMediaKeys = NO;
+	do {
 		libwebsocket_service(context, 50);
-	}
-	// cleanup
+		if (shouldCaptureMediaKeys) {
+			// using [NSDate distantFuture] doesn't return until either an event is captured, or the world ends. unacceptable.
+			// 0.5s seems like long enough for an event to be captured, and if not it returns
+			NSEvent *event = [self nextEventMatchingMask:NSAnyEventMask untilDate:[NSDate dateWithTimeIntervalSinceNow:0.5] inMode:NSDefaultRunLoopMode dequeue:YES];
+			// and send it to myself
+			[self sendEvent:event];
+		}
+	} while (shouldKeepRunning);
+	// clean up time
 	libwebsocket_context_destroy(context);
+}
+- (void) terminate:(id)sender {
+	shouldKeepRunning = NO;
+}
+@end
+
+int main(int argc, char **argv) {
+	// create and run the application
+	[[[MediaKeys alloc] init] run];
 	// success
 	return EXIT_SUCCESS;
 }
