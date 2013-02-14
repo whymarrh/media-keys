@@ -17,6 +17,7 @@ struct per_session_data__media_keys {
 	int number;
 };
 
+// callback function for HTTP requests
 static int callback_http(struct libwebsocket_context *this,
                          struct libwebsocket *wsi,
                          enum libwebsocket_callback_reasons reason,
@@ -26,6 +27,7 @@ static int callback_http(struct libwebsocket_context *this,
 	return 0;
 }
 
+// callback function for WS requests
 static int callback_media_keys(struct libwebsocket_context *this,
                                struct libwebsocket *wsi,
                                enum libwebsocket_callback_reasons reason,
@@ -36,7 +38,7 @@ static int callback_media_keys(struct libwebsocket_context *this,
 		case LWS_CALLBACK_ESTABLISHED:
 			NSLog(@"Connection established.");
 			// use this new connection to send outgoing messages
-			// the issue (I think) this causes occurs when multiple
+			// the issue this causes occurs when multiple
 			// connections are made - only the newest is sent the
 			// data. Maybe I can use an array? and that way I could
 			// loop over all the connections and send the data.
@@ -54,8 +56,9 @@ static int callback_media_keys(struct libwebsocket_context *this,
 	return 0;
 }
 
+// list of supported protocols and their callbacks
 static struct libwebsocket_protocols protocols[] = {
-	// { name, callback, per_session_data_size }
+	// { name, callback, per_session_data_size, max frame size / rx buffer }
 	{ "http-only", callback_http, 0, 0 },
 	{ "media-keys", callback_media_keys, sizeof(struct per_session_data__media_keys), 10 },
 	// terminator
@@ -111,7 +114,7 @@ static struct libwebsocket_protocols protocols[] = {
 	// create the context for the web sockets
 	struct libwebsocket_context *context;
 	struct lws_context_creation_info info;
-	memset(&info, 0, sizeof info);
+	memset(&info, 0, sizeof(info));
 	info.port = 8800;
 	info.iface = NULL;
 	info.protocols = protocols;
@@ -151,6 +154,6 @@ static struct libwebsocket_protocols protocols[] = {
 int main(int argc, char **argv) {
 	// create and run the application
 	[[[MediaKeys alloc] init] run];
-	// success
+	// all the success
 	return EXIT_SUCCESS;
 }
