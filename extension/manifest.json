@@ -1,7 +1,7 @@
 {
-	"name": "Foo bar baz",
-	"description": "This is really just filler text until I can think of something better.",
-	"version": "0.0.5",
+	"name": "Media Keys",
+	"description": "Allows using previous, play/pause, and next keys for Grooveshark.",
+	"version": "0.0.9",
 	"manifest_version": 2,
 	"content_scripts": [{
 			"matches": ["*://grooveshark.com/*"],
