@@ -6,7 +6,6 @@ Still todo
 ==========
 
 * Stop event propagation to iTunes & co.
-* Auto-reconnect via JS when server restarts
 * Play/pause abilities
 
 Resources
