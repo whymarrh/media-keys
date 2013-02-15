@@ -139,7 +139,7 @@ static CGEventRef tapEventCallback(CGEventTapProxy proxy, CGEventType type, CGEv
 	struct libwebsocket_context *context;
 	struct lws_context_creation_info info;
 	memset(&info, 0, sizeof(info));
-	info.port = 8800;
+	info.port = 9331;
 	info.iface = NULL;
 	info.protocols = protocols;
 	info.extensions = libwebsocket_get_internal_extensions();

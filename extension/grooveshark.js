@@ -18,7 +18,7 @@ var inject = function (fn) {
 	"use strict";
 	var connected = false,
 	host = "127.0.0.1",
-	port = "8800",
+	port = "9331",
 	protocol = "media-keys",
 	wSocket = undefined,
 	connect = function () {
