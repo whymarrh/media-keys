@@ -1,4 +1,4 @@
-Chrome extension (and a small app) that allow you use the media keys (F7, F8, F9) to control web-based streaming services like [Grooveshark](http://grooveshark.com). Thanks to [Boris Smus for the implementation idea](http://smus.com/chrome-media-keys-revisited/).
+Chrome extension (and a small app) that allows you use the media keys (F7, F8, F9) to control web-based streaming services like [Grooveshark](http://grooveshark.com). Thanks to [Boris Smus for the implementation idea](http://smus.com/chrome-media-keys-revisited/).
 
 To compile the server source, modify the `compile.sh` script to reflect your installation of [libwebsockets](http://libwebsockets.org/).
 
