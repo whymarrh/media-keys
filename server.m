@@ -11,7 +11,7 @@
 
 static struct libwebsocket *wso = NULL;
 static BOOL shouldKeepRunning = YES;
-static BOOL shouldCaptureMediaKeys = NO;
+static BOOL shouldInterceptMediaKeyEvents = NO;
 
 struct per_session_data__media_keys {
 	int number;
@@ -44,7 +44,7 @@ static int callback_media_keys(struct libwebsocket_context *this,
 			// loop over all the connections and send the data.
 			wso = wsi;
 			// start capturing keystrokes
-			shouldCaptureMediaKeys = YES;
+			shouldInterceptMediaKeyEvents = YES;
 			break;
 		case LWS_CALLBACK_RECEIVE:
 			NSLog(@"%s", incoming);
@@ -132,10 +132,10 @@ static struct libwebsocket_protocols protocols[] = {
 	// woot!
 	NSLog(@"Server started.");
 	shouldKeepRunning = YES;
-	shouldCaptureMediaKeys = NO;
+	shouldInterceptMediaKeyEvents = NO;
 	do {
 		libwebsocket_service(context, 50);
-		if (shouldCaptureMediaKeys) {
+		if (shouldInterceptMediaKeyEvents) {
 			// using [NSDate distantFuture] doesn't return until either an event is captured, or the world ends. unacceptable.
 			// 0.5s seems like long enough for an event to be captured, and if not it returns
 			NSEvent *event = [self nextEventMatchingMask:NSAnyEventMask untilDate:[NSDate dateWithTimeIntervalSinceNow:0.5] inMode:NSDefaultRunLoopMode dequeue:YES];
