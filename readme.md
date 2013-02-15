@@ -6,6 +6,7 @@ Still todo
 ==========
 
 * Stop event propagation to iTunes & co. Even though Grooveshark will be sent the play/pause command, iTunes starting up negates everything.
+* Popups (notifications) could be useful...
 
 Resources
 =========
