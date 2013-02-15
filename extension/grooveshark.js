@@ -29,10 +29,10 @@ var inject = function (fn) {
 				window.Grooveshark.previous();
 			});
 		}
-		else if (kcode == 16) {
+		else if (kcode === 16) {
 			console.log("Play/pause.");
 		}
-		else if (kcode == 19) {
+		else if (kcode === 19) {
 			console.log("Next song.");
 			inject(function () {
 				window.Grooveshark.next();
