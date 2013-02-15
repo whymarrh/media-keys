@@ -17,11 +17,11 @@ var inject = function (fn) {
 
 	"use strict";
 	var connected = false,
-	    host = "127.0.0.1",
-	    port = "8800",
-	    protocol = "media-keys",
-	    wSocket = undefined;
-	var connect = function () {
+	host = "127.0.0.1",
+	port = "8800",
+	protocol = "media-keys",
+	wSocket = undefined,
+	connect = function () {
 		wSocket = new window.WebSocket("ws://" + host + ":" + port + "/", protocol);
 		wSocket.onopen = function () {
 			console.log("Connection established to " + host + ":" + port + ".");
@@ -32,7 +32,7 @@ var inject = function (fn) {
 				console.error("Whoops. Something went wrong.");
 			};
 			this.onmessage = function (msg) {
-				var kcode = msg.data.charCodeAt(0);
+				var kcode = msg.data.charCodeAt(0); // we're only expecting a single number
 				// console.log("Received key code " + kcode + ".");
 				if (kcode === 20) {
 					console.log("Previous song.");
