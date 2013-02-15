@@ -85,7 +85,7 @@ static struct libwebsocket_protocols protocols[] = {
 		case NX_KEYTYPE_REWIND:
 			if (state == 0) {
 				NSLog(@"Previous song. %d.", key);
-				data[LWS_SEND_BUFFER_PRE_PADDING] = (char) key;
+				data[LWS_SEND_BUFFER_PRE_PADDING] = key;
 			}
 			break;
 		case NX_KEYTYPE_PLAY:
