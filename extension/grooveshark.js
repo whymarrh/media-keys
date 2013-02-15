@@ -44,6 +44,15 @@ var inject = function (fn) {
 				}
 				else if (kcode === 16) {
 					console.log("Play/pause.");
+					inject(function () {
+						var status = window.Grooveshark.getCurrentSongStatus().status;
+						if (status === "playing") {
+							window.Grooveshark.pause();
+						}
+						else {
+							window.Grooveshark.play();
+						}
+					});
 				}
 				else if (kcode === 19) {
 					console.log("Next song.");
