@@ -1,12 +1,20 @@
 var inject = function (fn) {
+
 	"use strict";
+	// content scripts for Chrome extensions run
+	// in an isolated environment with no
+	// access to the embedding page. Thus, one of the
+	// ways to execute JS on the embedding page is to
+	// literally inject it into the DOM.
 	var script = document.createElement("script");
 	script.textContent = "(" + fn + ")();";
 	(document.head || document.documentElement).appendChild(script);
 	script.parentNode.removeChild(script);
+
 };
 
 !function (undefined) {
+
 	"use strict";
 	var host = "127.0.0.1",
 	    port = "8800",
@@ -42,4 +50,5 @@ var inject = function (fn) {
 	wSocket.onclose = function () {
 		console.log("Connection to " + host + ":" + port + " closed.");
 	};
+
 }();
