@@ -16,39 +16,57 @@ var inject = function (fn) {
 !function (undefined) {
 
 	"use strict";
-	var host = "127.0.0.1",
+	var connected = false,
+	    host = "127.0.0.1",
 	    port = "8800",
 	    protocol = "media-keys",
-	    wSocket = new window.WebSocket("ws://" + host + ":" + port + "/", protocol);
-	wSocket.onopen = function () {
-		console.log("Connection established to " + host + ":" + port + ".");
+	    wSocket = undefined;
+	var connect = function () {
+		wSocket = new window.WebSocket("ws://" + host + ":" + port + "/", protocol);
+		wSocket.onopen = function () {
+			console.log("Connection established to " + host + ":" + port + ".");
+			connected = true;
+			// attach 'onerror', 'onmessage', and 'onclose' handlers
+			// only when a connection has been made (inside this 'onopen' function)
+			this.onerror = function () {
+				console.error("Whoops. Something went wrong.");
+			};
+			this.onmessage = function (msg) {
+				var kcode = msg.data.charCodeAt(0);
+				// console.log("Received key code " + kcode + ".");
+				if (kcode === 20) {
+					console.log("Previous song.");
+					inject(function () {
+						// access to window.Grooveshark
+						// through injected JS script
+						window.Grooveshark.previous();
+					});
+				}
+				else if (kcode === 16) {
+					console.log("Play/pause.");
+				}
+				else if (kcode === 19) {
+					console.log("Next song.");
+					inject(function () {
+						window.Grooveshark.next();
+					});
+				}
+			};
+			this.onclose = function () {
+				console.log("Connection to " + host + ":" + port + " lost.");
+				connected = false;
+			};
+		};
 	};
-	wSocket.onerror = function () {
-		console.error("Whoops. Something went wrong.");
-	};
-	wSocket.onmessage = function (msg) {
-		var kcode = msg.data.charCodeAt(0);
-		console.log("Received key code " + kcode + ".");
-		if (kcode === 20) {
-			console.log("Previous song.");
-			inject(function () {
-				// access to window.Grooveshark
-				// through injected JS script
-				window.Grooveshark.previous();
-			});
+	// attempt to connect straight away, and
+	// every second after a connection is lost
+	!function reconnect() {
+		if (!connected) {
+			// reconnect to the server
+			connect();
 		}
-		else if (kcode === 16) {
-			console.log("Play/pause.");
-		}
-		else if (kcode === 19) {
-			console.log("Next song.");
-			inject(function () {
-				window.Grooveshark.next();
-			});
-		}
-	};
-	wSocket.onclose = function () {
-		console.log("Connection to " + host + ":" + port + " closed.");
-	};
+		// every second
+		setTimeout(reconnect, 1000);
+	}();
 
 }();
