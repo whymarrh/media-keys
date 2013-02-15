@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <string.h>
 
 // ObjC
 #import <Foundation/Foundation.h>
@@ -9,23 +8,15 @@
 // libwebsockets
 #include <libwebsockets.h>
 
+static CFRunLoopRef tapThreadRunLoop = NULL;
+static CFRunLoopSourceRef eventPortSource = NULL;
+static CFMachPortRef eventPort = NULL;
 static struct libwebsocket *wso = NULL;
 static BOOL shouldKeepRunning = YES;
-static BOOL shouldInterceptMediaKeyEvents = NO;
 
 struct per_session_data__media_keys {
 	int number;
 };
-
-// callback function for HTTP requests
-static int callback_http(struct libwebsocket_context *this,
-                         struct libwebsocket *wsi,
-                         enum libwebsocket_callback_reasons reason,
-                         void *user,
-                         void *incoming,
-                         size_t len) {
-	return 0;
-}
 
 // callback function for WS requests
 static int callback_media_keys(struct libwebsocket_context *this,
@@ -36,15 +27,11 @@ static int callback_media_keys(struct libwebsocket_context *this,
                                size_t len) {
 	switch (reason) {
 		case LWS_CALLBACK_ESTABLISHED:
-			NSLog(@"Connection established.");
+			NSLog(@"New connection established.");
 			// use this new connection to send outgoing messages
-			// the issue this causes occurs when multiple
-			// connections are made - only the newest is sent the
-			// data. Maybe I can use an array? and that way I could
-			// loop over all the connections and send the data.
+			// this may cause issues when multiple connections
+			// are made - only the newest is sent the data.
 			wso = wsi;
-			// start capturing keystrokes
-			shouldInterceptMediaKeyEvents = YES;
 			break;
 		case LWS_CALLBACK_RECEIVE:
 			NSLog(@"%s", incoming);
@@ -59,45 +46,82 @@ static int callback_media_keys(struct libwebsocket_context *this,
 // list of supported protocols and their callbacks
 static struct libwebsocket_protocols protocols[] = {
 	// { name, callback, per_session_data_size, max frame size / rx buffer }
-	{ "http-only", callback_http, 0, 0 },
 	{ "media-keys", callback_media_keys, sizeof(struct per_session_data__media_keys), 10 },
 	// terminator
 	{ NULL, NULL, 0, 0 }
 };
 
 @interface MediaKeys : NSApplication
+- (void) handleMediaKeyEvent:(NSEvent*)event;
 @end
 
-@implementation MediaKeys
-- (void) sendEvent:(NSEvent*)event {
-	if ([event type] == NSSystemDefined && [event subtype] == 8) {
-		int kcode   = ([event data1] & 0xffff0000) >> 16;
-		int kflags  =  [event data1] & 0x0000ffff;
-		int kstate  = ((kflags & 0xff00) >> 8) == 0xa;
-		int krepeat = kflags * 0x1;
-		[self mediaKeysEvent:kcode state:kstate repeat:krepeat];
+static CGEventRef tapEventCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon) {
+	NSEvent *nsEvent = nil;
+	@try {
+		nsEvent = [NSEvent eventWithCGEvent:event];
 	}
+	@catch (NSException *e) {
+		return event;
+	}
+	// we have an NSEvent and the type
+	if (type != NSSystemDefined || [nsEvent subtype] != 8) {
+		// this probably is not a media key
+		return event;
+	}
+	int kcode = ([nsEvent data1] & 0xffff0000) >> 16;
+	if (kcode != NX_KEYTYPE_REWIND && kcode != NX_KEYTYPE_PLAY && kcode != NX_KEYTYPE_FAST) {
+		// we only want certain media keys
+		return event;
+	}
+	MediaKeys *self = (__bridge MediaKeys*) refcon;
+	// this feels very wrong
+	[self handleMediaKeyEvent:nsEvent];
+	// handle the event on the main thread
+	// [self performSelectorOnMainThread:@selector(handleMediaKeyEvent:) withObject:nsEvent waitUntilDone:NO];
+	// pass nothing along
+	return NULL;
 }
-- (void) mediaKeysEvent:(int)key state:(BOOL)state repeat:(BOOL)repeat {
-	unsigned char *data = (unsigned char*) malloc(LWS_SEND_BUFFER_PRE_PADDING + 1 + LWS_SEND_BUFFER_POST_PADDING);
-	data[LWS_SEND_BUFFER_PRE_PADDING] = 42;
-	switch (key) {
+
+@implementation MediaKeys
+- (void) startWatchingMediaKeys {
+	eventPort = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, kCGEventTapOptionDefault, CGEventMaskBit(NX_SYSDEFINED), tapEventCallback, (__bridge void*) self);
+	assert(eventPort != NULL);
+	eventPortSource = CFMachPortCreateRunLoopSource(kCFAllocatorSystemDefault, eventPort, 0);
+	assert(eventPortSource != NULL);
+	// start a new thread on which to watch for events
+	[NSThread detachNewThreadSelector:@selector(eventTapThread) toTarget:self withObject:nil];
+}
+- (void) eventTapThread {
+	tapThreadRunLoop = CFRunLoopGetCurrent();
+	CFRunLoopAddSource(tapThreadRunLoop, eventPortSource, kCFRunLoopCommonModes);
+	CFRunLoopRun();
+}
+- (void) handleMediaKeyEvent:(NSEvent*)event {
+	// the key code from the event
+	int kcode = ([event data1] & 0xffff0000) >> 16;
+	// the state of the the event
+	int kstate  = ((([event data1] & 0x0000ffff) & 0xff00) >> 8) == 0xa;
+	// the length of, and the data to be sent across
+	int len = 1;
+	unsigned char *data = (unsigned char*) malloc(LWS_SEND_BUFFER_PRE_PADDING + len + LWS_SEND_BUFFER_POST_PADDING);
+	data[LWS_SEND_BUFFER_PRE_PADDING] = 42; // default value
+	switch (kcode) {
 		case NX_KEYTYPE_REWIND:
-			if (state == 0) {
-				NSLog(@"Previous song. %d.", key);
-				data[LWS_SEND_BUFFER_PRE_PADDING] = key;
+			if (kstate == 0) {
+				NSLog(@"Previous song.");
+				data[LWS_SEND_BUFFER_PRE_PADDING] = kcode;
 			}
 			break;
 		case NX_KEYTYPE_PLAY:
-			if (state == 0) {
-				NSLog(@"Play/pause. %d.", key);
-				data[LWS_SEND_BUFFER_PRE_PADDING] = key;
+			if (kstate == 0) {
+				NSLog(@"Play/pause.");
+				data[LWS_SEND_BUFFER_PRE_PADDING] = kcode;
 			}
 			break;
 		case NX_KEYTYPE_FAST:
-			if (state == 0) {
-				NSLog(@"Next song. %d.", key);
-				data[LWS_SEND_BUFFER_PRE_PADDING] = key;
+			if (kstate == 0) {
+				NSLog(@"Next song.");
+				data[LWS_SEND_BUFFER_PRE_PADDING] = kcode;
 			}
 			break;
 		default:
@@ -106,7 +130,7 @@ static struct libwebsocket_protocols protocols[] = {
 	}
 	if (data[LWS_SEND_BUFFER_PRE_PADDING] != 42) {
 		// the data has changed && it needs sending
-		libwebsocket_write(wso, &data[LWS_SEND_BUFFER_PRE_PADDING], /* length of the actual data */ 1, LWS_WRITE_TEXT);
+		libwebsocket_write(wso, &data[LWS_SEND_BUFFER_PRE_PADDING], len, LWS_WRITE_TEXT);
 	}
 	free(data);
 }
@@ -131,18 +155,11 @@ static struct libwebsocket_protocols protocols[] = {
 	}
 	// woot!
 	NSLog(@"Server started.");
-	shouldKeepRunning = YES;
-	shouldInterceptMediaKeyEvents = NO;
-	do {
+	// start watching for media key activity
+	[self startWatchingMediaKeys];
+	while (shouldKeepRunning) {
 		libwebsocket_service(context, 50);
-		if (shouldInterceptMediaKeyEvents) {
-			// using [NSDate distantFuture] doesn't return until either an event is captured, or the world ends. unacceptable.
-			// 0.5s seems like long enough for an event to be captured, and if not it returns
-			NSEvent *event = [self nextEventMatchingMask:NSAnyEventMask untilDate:[NSDate dateWithTimeIntervalSinceNow:0.5] inMode:NSDefaultRunLoopMode dequeue:YES];
-			// and send it to myself
-			[self sendEvent:event];
-		}
-	} while (shouldKeepRunning);
+	}
 	// clean up time
 	libwebsocket_context_destroy(context);
 }
