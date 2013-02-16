@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <signal.h>
 
 // ObjC
 #import <Foundation/Foundation.h>
@@ -168,7 +169,12 @@ static CGEventRef tapEventCallback(CGEventTapProxy proxy, CGEventType type, CGEv
 }
 @end
 
+void clean_exit(int arg) {
+	shouldKeepRunning = NO;
+}
+
 int main(int argc, char **argv) {
+	signal(SIGINT, clean_exit);
 	// create and run the application
 	[[[MediaKeys alloc] init] run];
 	// all the success
