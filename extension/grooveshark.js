@@ -24,14 +24,15 @@ var inject = function (fn) {
 	connect = function () {
 		wSocket = new window.WebSocket("ws://" + host + ":" + port + "/", protocol);
 		wSocket.onopen = function () {
+			var socket = this; // http://evanprodromou.name/2013/02/08/on-using-this-exactly-once/
 			console.log("Connection established to " + host + ":" + port + ".");
 			connected = true;
 			// attach 'onerror', 'onmessage', and 'onclose' handlers
 			// only when a connection has been made (inside this 'onopen' function)
-			this.onerror = function () {
+			socket.onerror = function () {
 				console.error("Whoops. Something went wrong.");
 			};
-			this.onmessage = function (msg) {
+			socket.onmessage = function (msg) {
 				var kcode = msg.data.charCodeAt(0); // we're only expecting a single number
 				// console.log("Received key code " + kcode + ".");
 				if (kcode === 20) {
@@ -61,7 +62,7 @@ var inject = function (fn) {
 					});
 				}
 			};
-			this.onclose = function () {
+			socket.onclose = function () {
 				console.log("Connection to " + host + ":" + port + " lost.");
 				connected = false;
 			};
