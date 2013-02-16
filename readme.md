@@ -30,4 +30,4 @@ It can't do that. But you can add a daemon to your system.
 Will other applications still have access to the media keys?
 ============================================================
 
-No, not when the server is running. Thus, if the server is always (due to it starting on system start) it will always be consuming the media key events whole, all other applications will no longer work with said keys. You could always use something like [Lingon](http://www.peterborgapps.com/lingon/) to start the server.
+No, not when the server is running. Thus, if the server is always (due to it starting with the system) it will always be consuming the media key events whole, all other applications will no longer work with said keys. You could always use something like [Lingon](http://www.peterborgapps.com/lingon/) to start the server.
