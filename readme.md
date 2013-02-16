@@ -2,8 +2,8 @@ Media Keys is a Chrome extension (and a small app) that allows you use the media
 
 To compile the server source, modify the `compile.sh` script to reflect your installation of [libwebsockets](http://libwebsockets.org/).
 
-Still todo
-==========
+Still on the to-do list
+======================
 
 * Popups (notifications) could be useful...
 
@@ -19,8 +19,8 @@ It can't do that. But you can add a daemon to your system.
 
 1. Compile the server.
 2. Move the compiled file somewhere you won't loose it.
-3. You'll need some XML. (See the *Writing a "Hello World!" launchd Job* section [found here][1], changing the label and program arguments to any name and the location of the compiled executable respectively.)
-2. `sudo launchctl load -w /path/to/xml/file/`
-3. `ps -e | grep <the label you chose>` and you should see the process running.
-
-  [1]:http://developer.apple.com/library/mac/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html
+3. You'll need some XML. ([Get it here.](https://gist.github.com/whymarrh/4965481))
+4. Change the `/path/to/the/executable/file` to where your compiled server is.
+5. `sudo launchctl load -w /path/to/the/plist/file/`.
+6. `ps -e | grep [m]ediakeys` and you should see the process running.
+7. All done.
