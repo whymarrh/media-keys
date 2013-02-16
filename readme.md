@@ -23,7 +23,7 @@ It can't do that. But you can add a daemon to your system.
 2. Move the compiled file somewhere you won't loose it.
 3. You'll need some XML. [Get some here.](https://gist.github.com/whymarrh/4965481)
 4. Change the `/path/to/the/executable/file` to where your compiled server is.
-5. Move the modified plist file to `~/Library/LaunchDaemons/`.
+5. Move the modified p-list file to `~/Library/LaunchDaemons/`.
 6. `launchctl load -w /path/to/the/plist/file`.
 7. `ps -e | grep [m]ediakeys` and you should see the process running.
 8. All done. The server will now run automagically on system start.
