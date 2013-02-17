@@ -12,7 +12,7 @@ Still on the to-do list
 Resources
 =========
 
-Definitely check out the [Grooveshark API](http://grooveshark.com/GroovesharkAPI.html) and [libwebsockets API](http://libwebsockets.org/libwebsockets-api-doc.html).
+Definitely check out the [Grooveshark API](http://developers.grooveshark.com/docs/js_api/) and [libwebsockets API](http://libwebsockets.org/libwebsockets-api-doc.html).
 
 You want this to start itself?
 ==============================
