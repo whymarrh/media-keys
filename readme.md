@@ -1,13 +1,17 @@
 Media Keys is a Chrome extension and a small app that allow you to dedicate the media keys (F7, F8, and F9) on a Mac keyboard to controlling web-based streaming services like [Grooveshark](http://grooveshark.com). Thanks to [Boris Smus for the implementation idea of using WebSockets](http://smus.com/chrome-media-keys-revisited/).
 
-See [Building a Chrome Extension](http://developer.chrome.com/extensions/getstarted.html#unpacked) for the extension install instructions.
-
-To compile the server source, modify the `compile.sh` script to reflect your installation of [libwebsockets](http://libwebsockets.org/).
-
 Still on the to-do list
 =======================
 
 * Song notifications could be useful...
+
+Installing
+==========
+
+1. git clone --recursive git://github.com/whymarrh/media-keys.git
+2. ./compile.sh
+
+Install extension by following [Installing an Unpacked Chrome Extension](http://developer.chrome.com/extensions/getstarted.html#unpacked).
 
 Resources
 =========
