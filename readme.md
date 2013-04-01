@@ -8,10 +8,14 @@ Still on the to-do list
 Installing
 ==========
 
-1. git clone --recursive git://github.com/whymarrh/media-keys.git
-2. ./compile.sh
+### Note: This project will by default install libwebsockets to `/usr/local`
 
-Install extension by following [Installing an Unpacked Chrome Extension](http://developer.chrome.com/extensions/getstarted.html#unpacked).
+1. `git clone --recursive git://github.com/whymarrh/media-keys.git`
+2. `./compile.sh`
+3. Install extension by following [Installing an Unpacked Chrome Extension](http://developer.chrome.com/extensions/getstarted.html#unpacked).
+
+### Installation Options
+You can set the location where the compile script searches for, and if not found installs, *libwebsockets* by changing step 2 to `LWS_DYNAMIC_LIB_DIR=my_path ./compile.sh` changing `my_path` to the **absolute** path to where  *libwebsockets* should be installed.
 
 Resources
 =========
