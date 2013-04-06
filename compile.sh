@@ -12,7 +12,7 @@ if [ ! -f $LWS_DYNAMIC_LIB ]; then
 	echo "libwebsockets.dylib not found in "$LWS_DYNAMIC_LIB". Compiling..."
 	mkdir -p build
 	cd build
-	cmake -DCMAKE_INSTALL_PREFIX:PATH=$LWS_DYNAMIC_LIB_DIR ../lib/libwebsockets 
+	cmake -DCMAKE_INSTALL_PREFIX:PATH=$LWS_DYNAMIC_LIB_DIR ../lib/libwebsockets
 	make
 	make install
 	cd ../
@@ -21,4 +21,4 @@ fi
 # ...aaannd this is how ObjC is compiled from the command line?
 clang -fobjc-arc -framework Cocoa -o $SERVER_EXE $SERVER_SOURCE -I $LWS_INCLUDE_DIR $LWS_DYNAMIC_LIB
 
-echo "Media Keys App Compiled" 
+echo "Media Keys App Compiled"
