@@ -1,3 +1,6 @@
+What is this?
+=============
+
 Media Keys is a Chrome extension and a small app that allow you to dedicate the media keys (F7, F8, and F9) on a Mac keyboard to controlling web-based streaming services like [Grooveshark](http://grooveshark.com). Thanks to [Boris Smus for the implementation idea of using WebSockets](http://smus.com/chrome-media-keys-revisited/).
 
 Still on the to-do list
@@ -5,29 +8,30 @@ Still on the to-do list
 
 * Song notifications could be useful...
 
-Installing
-==========
+Building
+========
 
-### Note: This project will by default install libwebsockets to `/usr/local`
+Unless specified otherwise, this project will install libwebsockets to `/usr/local/lib`. You can specify the location in which the compile script will look for or install libwebsockets to by changing step two (2) below to:
+
+    LWS_DYNAMIC_LIB_DIR=/some/awesome/path ./compile.sh
+
+Just make sure that `/some/awesome/path` is absolute.
 
 1. `git clone --recursive git://github.com/whymarrh/media-keys.git`
 2. `./compile.sh`
-3. Install extension by following [Installing an Unpacked Chrome Extension](http://developer.chrome.com/extensions/getstarted.html#unpacked).
-
-### Installation Options
-You can set the location where the compile script searches for, and if not found installs, *libwebsockets* by changing step 2 to `LWS_DYNAMIC_LIB_DIR=my_path ./compile.sh` changing `my_path` to the **absolute** path to where  *libwebsockets* should be installed.
+3. Install the Chrome extension - see [load the extension](http://developer.chrome.com/extensions/getstarted.html#unpacked).
 
 Resources
 =========
 
-Definitely check out the [Grooveshark API](http://developers.grooveshark.com/docs/js_api/) and [libwebsockets API](http://libwebsockets.org/libwebsockets-api-doc.html).
+Definitely check out the [Grooveshark API](http://developers.grooveshark.com/docs/js_api/) and the [libwebsockets API](http://libwebsockets.org/libwebsockets-api-doc.html).
 
 You want this to start itself?
 ==============================
 
 It can't do that. But you can add a daemon to your system.
 
-1. Compile the server.
+1. Compile the server. (See above.)
 2. Move the compiled file somewhere you won't loose it.
 3. You'll need some XML. [Get some here.](https://gist.github.com/whymarrh/4965481)
 4. Change the `/path/to/the/executable/file` to where your compiled server is.
@@ -44,5 +48,4 @@ No, not when the server is running. Thus, if the server is always running (due t
 Still to do
 ===========
 
-- Add libwebsockets as a Git submodule.
 - Override media key events sent via headsets/headphones.
