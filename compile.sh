@@ -14,7 +14,7 @@ if [ ! -f "$LWS_DYNAMIC_LIB" ]; then
 	cd build
 	cmake -DCMAKE_INSTALL_PREFIX:"PATH=$LWS_DYNAMIC_LIB_DIR" ../lib/libwebsockets
 	make
-	make install
+	sudo make install
 	cd ..
 fi
 
