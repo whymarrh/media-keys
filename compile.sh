@@ -18,7 +18,5 @@ if [ ! -f "$LWS_DYNAMIC_LIB" ]; then
 	cd ..
 fi
 
-# this is how ObjC is compiled from the command line?
 clang -fobjc-arc -framework Cocoa -o "$SERVER_EXE" "$SERVER_SOURCE" -I "$LWS_INCLUDE_DIR" "$LWS_DYNAMIC_LIB"
-
 echo "All done."
