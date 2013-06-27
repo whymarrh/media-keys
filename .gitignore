@@ -1,2 +1,5 @@
+*.pem
+*.crx
+
 build
 mediakeys
