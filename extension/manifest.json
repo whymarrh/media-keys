@@ -1,7 +1,7 @@
 {
 	"name": "Media Keys",
-	"description": "Allows using previous, play/pause, and next keys for Grooveshark.",
-	"version": "0.0.9",
+	"description": "Allows using previous, play/pause, and next keys to control Grooveshark.",
+	"version": "0.1.0",
 	"manifest_version": 2,
 	"content_scripts": [{
 		"matches": ["*://grooveshark.com/*"],
