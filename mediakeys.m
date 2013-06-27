@@ -1,182 +1,219 @@
-#include <stdlib.h>
-#include <signal.h>
-
-// ObjC
-#import <Foundation/Foundation.h>
 #import <Cocoa/Cocoa.h>
-#import <IOKit/hidsystem/ev_keymap.h>
+#import <libwebsockets.h>
+#import <signal.h>
+#import <stdlib.h>
 
-// libwebsockets
-#include <libwebsockets.h>
+#define MAX_CLIENTS 32 // arbitrary limit
+int num_clients = 0;
+struct libwebsocket *clients[MAX_CLIENTS];
 
-static CFRunLoopRef tapThreadRunLoop = NULL;
-static CFRunLoopSourceRef eventPortSource = NULL;
-static CFMachPortRef eventPort = NULL;
-static struct libwebsocket *wso = NULL;
-static BOOL shouldKeepRunning = YES;
-
-struct per_session_data__media_keys {
-	int number;
-};
-
-// callback function for WS requests
-static int callback_media_keys(struct libwebsocket_context *this,
-                               struct libwebsocket *wsi,
-                               enum libwebsocket_callback_reasons reason,
-                               void *user,
-                               void *incoming,
-                               size_t len) {
+/**
+ * Protocol callback
+ */
+int callback_media_keys(struct libwebsocket_context *this,
+                        struct libwebsocket *wsi,
+                        enum libwebsocket_callback_reasons reason,
+                        void *user,
+                        void *incoming,
+                        size_t len) {
 	switch (reason) {
-		case LWS_CALLBACK_ESTABLISHED:
-			NSLog(@"New connection established.");
-			// use this new connection to send outgoing messages
-			// this may cause issues when multiple connections
-			// are made - only the newest is sent the data.
-			wso = wsi;
+		// called before sending a response to the client
+		case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION: {
+			if (num_clients >= MAX_CLIENTS) {
+				return 1; // disallow connection
+			}
 			break;
-		case LWS_CALLBACK_RECEIVE:
-			NSLog(@"%s", incoming);
+		}
+		// called when a connection closes
+		case LWS_CALLBACK_CLOSED: {
+			printf("A client has left\n");
+			for (int i = 0; i < num_clients; i++) {
+				if (clients[i] == wsi) {
+					num_clients--;
+					printf("Removed client\n");
+					while (i < num_clients) {
+						// shift everyone down
+						clients[i] = clients[i + 1];
+						i++;
+					}
+				}
+			}
+			printf("%d client(s) remain\n", num_clients);
 			break;
-		default:
+		}
+		// called when a connection is made
+		case LWS_CALLBACK_ESTABLISHED: {
+			printf("New client connected\n");
+			clients[num_clients] = wsi;
+			printf("Client %d added\n", num_clients);
+			num_clients++;
+			break;
+		}
+		default: {
 			// do nothing
 			break;
+		}
 	}
 	return 0;
 }
 
-// list of supported protocols and their callbacks
-static struct libwebsocket_protocols protocols[] = {
-	// { name, callback, per_session_data_size, max frame size / rx buffer }
+struct per_session_data__media_keys { int code; };
+
+/**
+ * List of the supported protocols and their callback fns
+ */
+struct libwebsocket_protocols protocols[] = {
+	// { name, callback, per_session_data_size, max frame size }
 	{ "media-keys", callback_media_keys, sizeof(struct per_session_data__media_keys), 10 },
-	// terminator
-	{ NULL, NULL, 0, 0 }
+	{ NULL, NULL, 0, 0 } // terminator
 };
 
-@interface MediaKeys : NSApplication
-- (void) handleMediaKeyEvent:(NSEvent*)event;
+/**
+ * Runloop variable
+ */
+BOOL shouldKeepRunning = YES;
+
+CFRunLoopSourceRef eventPortSource = NULL;
+
+/**
+ * Prototype for key event callback
+ */
+CGEventRef tapEventCallback(CGEventTapProxy proxy, CGEventType eventType, CGEventRef eventRef, void *ref);
+
+/**
+ * Interface for MediaKeys class
+ */
+@interface MediaKeys: NSApplication
+- (void) listenForKeyEvents;
+- (void) eventTapThread;
+- (void) handleKeyCode: (int) kcode withKeyState: (int) kstate;
 @end
 
-static CGEventRef tapEventCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon) {
-	NSEvent *nsEvent = nil;
-	@try {
-		nsEvent = [NSEvent eventWithCGEvent:event];
-	}
-	@catch (NSException *e) {
-		return event;
-	}
-	// we have an NSEvent and the type
-	if (type != NSSystemDefined || [nsEvent subtype] != 8) {
-		// this probably is not a media key
-		return event;
-	}
-	int kcode = ([nsEvent data1] & 0xffff0000) >> 16;
-	if (kcode != NX_KEYTYPE_REWIND && kcode != NX_KEYTYPE_PLAY && kcode != NX_KEYTYPE_FAST) {
-		// we only want certain media keys
-		return event;
-	}
-	MediaKeys *self = (__bridge MediaKeys*) refcon;
-	// this feels very wrong
-	[self handleMediaKeyEvent:nsEvent];
-	// handle the event on the main thread
-	// [self performSelectorOnMainThread:@selector(handleMediaKeyEvent:) withObject:nsEvent waitUntilDone:NO];
-	// pass nothing along
-	return NULL;
-}
-
+/**
+ * Implementation of the MediaKeys class
+ */
 @implementation MediaKeys
-- (void) startWatchingMediaKeys {
-	eventPort = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap, kCGEventTapOptionDefault, CGEventMaskBit(NX_SYSDEFINED), tapEventCallback, (__bridge void*) self);
+- (void) listenForKeyEvents
+{
+	CFMachPortRef eventPort = CGEventTapCreate(
+	                              kCGSessionEventTap,
+	                              kCGHeadInsertEventTap,
+	                              kCGEventTapOptionDefault,
+	                              CGEventMaskBit(NX_SYSDEFINED),
+	                              tapEventCallback,
+	                              self
+	);
 	assert(eventPort != NULL);
 	eventPortSource = CFMachPortCreateRunLoopSource(kCFAllocatorSystemDefault, eventPort, 0);
 	assert(eventPortSource != NULL);
 	// start a new thread on which to watch for events
 	[NSThread detachNewThreadSelector:@selector(eventTapThread) toTarget:self withObject:nil];
 }
-- (void) eventTapThread {
-	tapThreadRunLoop = CFRunLoopGetCurrent();
+- (void) eventTapThread
+{
+	CFRunLoopRef tapThreadRunLoop = CFRunLoopGetCurrent();
 	CFRunLoopAddSource(tapThreadRunLoop, eventPortSource, kCFRunLoopCommonModes);
 	CFRunLoopRun();
 }
-- (void) handleMediaKeyEvent:(NSEvent*)event {
-	// the key code from the event
-	int kcode = ([event data1] & 0xffff0000) >> 16;
-	// the state of the the event
-	int kstate  = ((([event data1] & 0x0000ffff) & 0xff00) >> 8) == 0xa;
-	// the length of, and the data to be sent across
+- (void) handleKeyCode: (int) kcode withKeyState: (int) kstate
+{
+	if (kstate) {
+		return; // keydown
+	}
+	// keyup
 	int len = 1;
-	unsigned char *data = (unsigned char*) malloc(LWS_SEND_BUFFER_PRE_PADDING + len + LWS_SEND_BUFFER_POST_PADDING);
-	data[LWS_SEND_BUFFER_PRE_PADDING] = 42; // default value
-	switch (kcode) {
-		case NX_KEYTYPE_REWIND:
-			if (kstate == 0) {
-				NSLog(@"Previous song.");
-				data[LWS_SEND_BUFFER_PRE_PADDING] = kcode;
-			}
-			break;
-		case NX_KEYTYPE_PLAY:
-			if (kstate == 0) {
-				NSLog(@"Play/pause.");
-				data[LWS_SEND_BUFFER_PRE_PADDING] = kcode;
-			}
-			break;
-		case NX_KEYTYPE_FAST:
-			if (kstate == 0) {
-				NSLog(@"Next song.");
-				data[LWS_SEND_BUFFER_PRE_PADDING] = kcode;
-			}
-			break;
-		default:
-			// do nothing
-			break;
+	unsigned char data[LWS_SEND_BUFFER_PRE_PADDING + len + LWS_SEND_BUFFER_POST_PADDING];
+	data[LWS_SEND_BUFFER_PRE_PADDING] = kcode;
+	for (int i = 0; i < num_clients; i++) {
+		libwebsocket_write(clients[i], &data[LWS_SEND_BUFFER_PRE_PADDING], len, LWS_WRITE_TEXT);
+		NSLog(@"Sent %d", kcode);
 	}
-	if (data[LWS_SEND_BUFFER_PRE_PADDING] != 42) {
-		// the data has changed && it needs sending
-		libwebsocket_write(wso, &data[LWS_SEND_BUFFER_PRE_PADDING], len, LWS_WRITE_TEXT);
-	}
-	free(data);
 }
-- (void) run {
-	// create the context for the web sockets
+- (void) run
+{
+	int log_level = 1; // errors only
+	lws_set_log_level(log_level, lwsl_emit_syslog);
 	struct libwebsocket_context *context;
 	struct lws_context_creation_info info;
 	memset(&info, 0, sizeof(info));
+
 	info.port = 9331;
 	info.iface = NULL;
-	info.protocols = protocols;
+	info.protocols = protocols; // from global scope
 	info.extensions = libwebsocket_get_internal_extensions();
 	info.ssl_cert_filepath = NULL;
 	info.ssl_private_key_filepath = NULL;
 	info.gid = -1;
 	info.uid = -1;
 	info.options = 0;
+
 	context = libwebsocket_create_context(&info);
 	if (context == NULL) {
 		NSLog(@"Error creating websocket server.");
 		return;
 	}
-	// woot!
-	NSLog(@"Server started.");
-	// start watching for media key activity
-	[self startWatchingMediaKeys];
+
+	NSLog(@"Server started");
+	[self listenForKeyEvents];
 	while (shouldKeepRunning) {
 		libwebsocket_service(context, 50);
 	}
-	// clean up time
+
 	libwebsocket_context_destroy(context);
+	NSLog(@"End run");
 }
-- (void) terminate:(id)sender {
+- (void) terminate: (id) sender
+{
 	shouldKeepRunning = NO;
 }
 @end
 
-void clean_exit(int arg) {
+/**
+ * Callback for key events
+ */
+CGEventRef tapEventCallback(CGEventTapProxy proxy, CGEventType eventType, CGEventRef eventRef, void *ref)
+{
+	NSEvent *event = nil;
+	@try {
+		// attempt to convert to NSEvent
+		event = [NSEvent eventWithCGEvent:eventRef];
+	}
+	@catch (NSException *e) {
+		return eventRef;
+	}
+
+	int keyCode = ([event data1] & 0xffff0000) >> 16; // magic
+	int keyState = ((([event data1] & 0x0000ffff) & 0xff00) >> 8) == 0xa; // magic
+
+	if (eventType != NSSystemDefined || [event subtype] != 8 || (keyCode != 16 && keyCode != 19 && keyCode != 20)) {
+		return eventRef; // not the key we're looking for
+	}
+
+	MediaKeys *keys = ref;
+	[keys handleKeyCode:keyCode withKeyState:keyState];
+	[event dealloc];
+	return nil; // do not pass along the event
+}
+
+/**
+ * Signal handler
+ */
+void signal_handler(int sig)
+{
+	printf("\n");
 	shouldKeepRunning = NO;
 }
 
-int main(int argc, char **argv) {
-	signal(SIGINT, clean_exit);
-	// create and run the application
-	[[[MediaKeys alloc] init] run];
-	// all the success
-	return EXIT_SUCCESS;
+/**
+ * Main method
+ */
+int main(int argc, char **argv)
+{
+	printf("Start main\n");
+	signal(SIGINT, signal_handler);
+	MediaKeys *keys = [[MediaKeys alloc] init];
+	[keys run];
+	[keys dealloc];
+	printf("After dealloc\n");
+	return 0;
 }
