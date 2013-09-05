@@ -4,7 +4,7 @@ Media Keys
 What is this?
 -------------
 
-Media Keys is a Chrome extension and a small app that allow you to dedicate the media keys (F7, F8, and F9) on a Mac keyboard to controlling web-based streaming services like [Grooveshark](http://grooveshark.com). Thanks to [Boris Smus for the implementation idea of using WebSockets](http://smus.com/chrome-media-keys-revisited/).
+Media Keys is a Chrome extension and a small app that allow you to dedicate the media keys (F7, F8, and F9) on a Mac keyboard to controlling web-based streaming services like [Rdio](http://rdio.com). Thanks to [Boris Smus for the implementation idea of using WebSockets](http://smus.com/chrome-media-keys-revisited/).
 
 Still on the to-do list
 -----------------------
@@ -28,7 +28,7 @@ Just make sure that `/some/awesome/path` is absolute.
 Resources
 ---------
 
-Definitely check out the [Grooveshark API](http://developers.grooveshark.com/docs/js_api/) and the [libwebsockets API](http://libwebsockets.org/libwebsockets-api-doc.html).
+Definitely check out the [Rdio API](http://developer.rdio.com/docs/Web_Playback_API) and the [libwebsockets API](http://libwebsockets.org/libwebsockets-api-doc.html).
 
 You want this to start itself?
 ------------------------------

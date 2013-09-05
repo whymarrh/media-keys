@@ -1,10 +1,10 @@
 {
 	"name": "Media Keys",
-	"description": "Allows using previous, play/pause, and next keys to control Grooveshark.",
-	"version": "0.1.0",
+	"description": "Allows you to use the previous, play/pause, and next keys to control Rdio.",
+	"version": "0.1.1",
 	"manifest_version": 2,
 	"content_scripts": [{
-		"matches": ["*://grooveshark.com/*"],
-		"js": ["grooveshark.js"]
+		"matches": ["*://*.rdio.com/*"],
+		"js": ["rdio.js"]
 	}]
 }
