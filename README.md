@@ -16,11 +16,7 @@ Building from source
 
 Dependencies: [CMake](http://cmake.org/)
 
-Unless specified otherwise, this project will install libwebsockets to `/usr/local/lib`. You can specify the location in which the compile script will look for or install libwebsockets to by changing step 2 below to:
-
-    LWS_DYNAMIC_LIB_DIR=/some/awesome/path ./compile.sh
-
-Just make sure that `/some/awesome/path` is absolute.
+This project will install libwebsockets (if it is not already installed).
 
 1. `git clone --recursive git://github.com/whymarrh/media-keys.git`
 2. `./install.sh`
