@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 ./compile.sh
 DIR="$HOME/.mediakeys"
 [[ -d $DIR ]] || mkdir $DIR
