@@ -1,7 +1,7 @@
 {
 	"name": "Media Keys",
-	"description": "Allows you to use the previous, play/pause, and next keys to control Rdio.",
-	"version": "0.1.1",
+	"description": "Dedicate the media keys (F7, F8, and F9) on a Mac keyboard to controlling Rdio.",
+	"version": "0.1.2",
 	"manifest_version": 2,
 	"content_scripts": [{
 		"matches": ["*://*.rdio.com/*"],
