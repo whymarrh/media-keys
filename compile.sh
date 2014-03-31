@@ -9,7 +9,7 @@ SERVER_SOURCE=mediakeys.m
 LWS_INCLUDE_DIR=$LWS_DYNAMIC_LIB_DIR/include
 LWS_DYNAMIC_LIB=$LWS_DYNAMIC_LIB_DIR/lib/$DYLIB
 
-# build libwebsockets if it not found
+# Build libwebsockets if it not found
 if [ ! -f "$LWS_DYNAMIC_LIB" ]
 then
 	echo "$DYLIB was not found in $LWS_DYNAMIC_LIB"
