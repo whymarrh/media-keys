@@ -14,6 +14,8 @@ if [ ! -f "$LWS_DYNAMIC_LIB" ]
 then
 	echo "$DYLIB was not found in $LWS_DYNAMIC_LIB"
 	echo "Building libwebsockets"
+	git submodule init
+	git submodule foreach git pull origin master
 	mkdir build
 	cd build
 	cmake -DCMAKE_INSTALL_PREFIX:"PATH=$LWS_DYNAMIC_LIB_DIR" ../lib/libwebsockets
