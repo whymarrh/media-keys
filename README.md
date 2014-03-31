@@ -1,7 +1,7 @@
 Media Keys
 ==========
 
-Media Keys is a small WebSocket server and Chrome extension that together allow you to dedicate the media keys (F7, F8, and F9) on a Mac keyboard to controlling [Rdio](http://rdio.com) (or if you're the hacker type, any web-based streaming service). Credit goes to [Boris Smus for the  WebSocket idea](http://smus.com/chrome-media-keys-revisited/).
+Media Keys is a small WebSocket server and Chrome extension that together allow you to dedicate the media keys (F7, F8, and F9) on a Mac keyboard to controlling [Rdio](http://rdio.com) (or if you're the hacker type, any web-based streaming service). [Credit goes to Boris Smus for the  WebSocket idea.](http://smus.com/chrome-media-keys-revisited/)
 
 Still on the to-do list
 -----------------------
@@ -9,18 +9,28 @@ Still on the to-do list
 * Song notifications could be useful...
 * Override events sent via headsets/headphones.
 
-Issues/pull requests are welcome.
+Issues/pull requests welcome.
 
 Building from source
 --------------------
 
-Dependencies: [CMake](http://cmake.org/)
+Dependencies: [CMake](http://cmake.org/cmake/resources/software.html)
 
-This project will install libwebsockets (if it is not already installed).
+If not already installed, this project will install [libwebsockets](https://github.com/warmcat/libwebsockets).
 
-1. `git clone --recursive git://github.com/whymarrh/media-keys.git`
-2. `./install.sh`
-3. Install the Chrome extension
+```bash
+$ git clone --recursive git://github.com/whymarrh/media-keys.git
+$ ./install.sh
+```
+
+Then install the Chrome extension found in the `extension` folder:
+
+```bash
+$ cd extension/
+$ "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --pack-extension="$PWD"
+$ rm ../*.pem
+$ mv ../*.crx $HOME/Downloads/
+```
 
 Resources
 ---------
