@@ -1,6 +1,4 @@
-The MIT License (MIT)
-
-Copyright (c) 2013 Whymarrh Whitby
+Copyright (c) 2013 Whymarrh Whitby and all contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files ("the software"), to deal in the software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software, and to permit persons to whom the software is furnished to do so, subject to the following conditions:
 
