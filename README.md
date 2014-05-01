@@ -17,14 +17,7 @@ $ git clone --recursive git://github.com/whymarrh/media-keys.git
 $ ./install.sh
 ```
 
-Then install the Chrome extension found in the `extension` folder:
-
-```bash
-$ cd extension/
-$ "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --pack-extension="$PWD"
-$ rm ../*.pem
-$ mv ../*.crx $HOME/Downloads/
-```
+Add the Chrome extension found in the folder (the `Media Keys.crx` file) to Google Chrome (via drag-and-drop).
 
 Resources
 ---------

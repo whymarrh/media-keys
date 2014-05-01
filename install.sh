@@ -22,3 +22,15 @@ cat << EOF > com.whymarrh.apps.mediakeys.plist
 EOF
 mv com.whymarrh.apps.mediakeys.plist $HOME/Library/LaunchAgents
 launchctl load $HOME/Library/LaunchAgents/com.whymarrh.apps.mediakeys.plist
+
+# Package Google Chrome extension
+cd extension/
+CHROME_BINARY="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+if [[ ! -x $CHROME_BINARY ]]
+then
+	echo "You will need to install Google Chrome (Stable) to be able to package the extension"
+	exit 1
+fi
+"$CHROME_BINARY" --pack-extension="$PWD"
+rm ../extension.pem
+mv ../extension.crx ../Media\ Keys.crx
