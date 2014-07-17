@@ -24,7 +24,7 @@ mv com.whymarrh.apps.mediakeys.plist $HOME/Library/LaunchAgents
 launchctl load $HOME/Library/LaunchAgents/com.whymarrh.apps.mediakeys.plist
 
 # Package Google Chrome extension
-cd extension/
+cd extensions/MediaKeys.safariextension/
 CHROME_BINARY="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 if [[ ! -x $CHROME_BINARY ]]
 then
@@ -32,5 +32,5 @@ then
 	exit 1
 fi
 "$CHROME_BINARY" --pack-extension="$PWD"
-rm ../extension.pem
-mv ../extension.crx ../Media\ Keys.crx
+rm ../MediaKeys.safariextension.pem
+mv ../MediaKeys.safariextension.crx ../MediaKeys.crx
