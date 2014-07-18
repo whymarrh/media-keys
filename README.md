@@ -1,9 +1,11 @@
 Media Keys
 ==========
 
-Media Keys is a small WebSocket server and Chrome extension that together allow you to dedicate the media keys (F7, F8, and F9) on a Mac keyboard to controlling [Rdio](http://rdio.com) (or if you're the hacker type, any web-based streaming service). [Credit goes to Boris Smus for the  WebSocket idea.](http://smus.com/chrome-media-keys-revisited/)
+Media Keys is a small WebSocket server that run on OS X, emitting events when you press the "media keys" on your keyboard (F7, F8, and F9). With this you can, amongst other things, control web-based music streaming services. In the [extensions] folder, you will find Safari and Chrome extensions that control playback on Rdio.
 
-Note: since the server is always running (due to it starting with the system) it will always be consuming the media key events and no other applications (e.g. iTunes, QuickTime Player, etc) will recieve them.
+Credit for the idea of using WebSockets: [Boris Smus](http://smus.com/chrome-media-keys-revisited/)
+
+**Note**: the server starts with the system and is always running. It will always be consuming the media key events whole and no other applications (e.g. iTunes, QuickTime Player, etc) will recieve them.
 
 Building from source
 --------------------
@@ -17,9 +19,11 @@ $ git clone --recursive git://github.com/whymarrh/media-keys.git
 $ ./install.sh
 ```
 
-Add the Chrome extension found in the folder (the `Media Keys.crx` file) to Google Chrome (via drag-and-drop).
+Add the Chrome extension found in the extensions folder (the `Media Keys.crx` file) to Google Chrome (via drag'n'drop).
 
 Resources
 ---------
 
 Definitely check out the [Rdio API](http://developer.rdio.com/docs/Web_Playback_API) and the [libwebsockets API](http://libwebsockets.org/libwebsockets-api-doc.html).
+
+  [extensions]:extensions/
