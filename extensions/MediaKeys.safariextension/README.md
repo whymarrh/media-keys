@@ -29,7 +29,7 @@ then
 else
 	"$CHROME_BINARY" --pack-extension="$PWD"
 	rm ../MediaKeys.safariextension.pem
-	mv ../MediaKeys.safariextension.crx ../Downloads/MediaKeys.crx
+	mv ../MediaKeys.safariextension.crx ~/Downloads/MediaKeys.crx
 fi
 ```
 
