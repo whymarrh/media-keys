@@ -2,8 +2,8 @@
 
 ./compile.sh
 DIR="$HOME/.mediakeys"
-[[ -d $DIR ]] || mkdir $DIR
-mv mediakeys $DIR/mediakeys
+[[ -d $DIR ]] || mkdir "$DIR"
+mv mediakeys "$DIR/mediakeys"
 cat << EOF > com.whymarrh.apps.mediakeys.plist
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -20,8 +20,8 @@ cat << EOF > com.whymarrh.apps.mediakeys.plist
 	</dict>
 </plist>
 EOF
-mv com.whymarrh.apps.mediakeys.plist $HOME/Library/LaunchAgents
-launchctl load $HOME/Library/LaunchAgents/com.whymarrh.apps.mediakeys.plist
+mv com.whymarrh.apps.mediakeys.plist "$HOME/Library/LaunchAgents"
+launchctl load "$HOME/Library/LaunchAgents/com.whymarrh.apps.mediakeys.plist"
 
 # Package Google Chrome extension
 cd extensions/MediaKeys.safariextension/
